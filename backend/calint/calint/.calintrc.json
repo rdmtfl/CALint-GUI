@@ -1,0 +1,8 @@
+{
+  "roots": ["calint"],
+  "main": ["calint.main", 0],
+  "frameworks": ["calint.frameworks", 1],
+  "adapters": ["calint.adapters", 2],
+  "use_cases": ["calint.use_cases", 3],
+  "entities": ["calint.entities", 4]
+}

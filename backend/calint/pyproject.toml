@@ -1,0 +1,26 @@
+[tool.poetry]
+name = "ca-lint"
+version = "0.1.0"
+description = ""
+authors = ["author-name <clevio.orlando@unifesp.br>"]
+packages = [
+    { include = "calint/**/*.py" }
+]
+
+[tool.poetry.dependencies]
+python = "^3.9"
+import-linter = "^1.2.6"
+pylint = "^2.11.1"
+click = "^8.0.3"
+pytest = "^6.2.5"
+pytest-cov = "^3.0.0"
+
+[tool.poetry.scripts]
+calint = "calint.main:main"
+
+[tool.poetry.dev-dependencies]
+black = {version = "^21.12b0", allow-prereleases = true}
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"

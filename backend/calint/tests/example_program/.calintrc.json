@@ -1,0 +1,7 @@
+{
+  "entities": ["app.entities", 4],
+  "adapters": ["app.adapters", 2],
+  "use-cases": ["app.usecases", 3],
+  "frameworks": ["app.frameworks", 1],
+  "roots": ["app"]
+}
