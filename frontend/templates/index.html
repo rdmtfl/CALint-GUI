@@ -38,4 +38,34 @@
         </div>
     </div>
 </body>
+
+<script>
+    let sendBtn = document.getElementById("sendBtn");
+    let output = document.getElementById("output");
+    let payload = document.getElementById("payload");
+    let received = document.getElementById("received");
+
+    sendBtn.addEventListener("click", function() {
+        const body = {
+            method: 'POST',
+        }
+
+        fetch("http://localhost:5000/data", body)
+        .then((response) => response.json())
+        .then((data) => {
+            payload.innerHTML = "empty post request";
+            received.innerHTML = JSON.stringify(data, undefined, 4);
+            if(data.error) {
+                console.log(data.message);
+            }else{
+                output.innerHTML = `<br><strong>Response from CALint<!strong>: ${data.message}`;
+            }
+        })
+        .catch(error => {
+            output.innerhTML += "<br><br>Error: " + error;
+            })
+    })
+
+</script>
+
 </html>
