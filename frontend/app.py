@@ -8,6 +8,16 @@ app = Flask(__name__)
 def index():
     return render_template('index.html')
 
+# data endpoint
+@app.route('/data', methods=['POST'])
+def receive_data():
+    # Simulate processing the received data
+    response = {
+        'message': 'data received successfully',
+        'timestamp': datetime.datetime.now().isoformat()
+    }
+    return jsonify(response)
+
 # health endpoint
 @app.route('/health', methods=['GET', 'POST'])
 def health_check():
