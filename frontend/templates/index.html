@@ -11,6 +11,10 @@
 
 <body>
     <div class="container">
+
+
+
+
         <div class="row">
             <div class="col">
                 <h1 class="mt-5">Test JSON</h1>
@@ -22,6 +26,23 @@
                 </div>
             </div>
         </div>
+
+        <div id="DirectoryTab" class="tabcontent">
+        <h3>Analyze Directory Structure</h3>
+            <form id="directoryForm" enctype="multipart/form-data">
+                <div class="form-group">
+                    <label for="directoryFile">Upload Directory (ZIP) or Python Files:</label>
+                    <input type="file" id="directoryFile" name="directory" required>
+                </div>
+                <div class="form-group">
+                    <label for="configFile">Optional Configuration File:</label>
+                    <input type="file" id="configFile" name="config" accept=".ini,.txt">
+                </div>
+                <button type="submit">Analyze Directory</button>
+            </form>
+        </div>
+
+
         <div class="row">
             <div class="col">
                 <h4 class="mt-5">Sent</h4>
@@ -37,6 +58,9 @@
             </div>
         </div>
     </div>
+
+
+
 </body>
 
 <script>
