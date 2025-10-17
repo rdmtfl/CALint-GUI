@@ -11,90 +11,130 @@
 
 <body>
     <div class="container">
+        <h1>CALint Web Interface</h1>
+        <p class="lead">A web interface for CALint - Code Analysis Linter</p>
 
-
-
-
-        <div class="row">
-            <div class="col">
-                <h1 class="mt-5">Test JSON</h1>
-                <hr>
-                <a id="sendBtn" class="btn btn-outline-secondary" href="javascript:void(0);">Send JSON to CALint</a>
-
-                <div id="output" class="mt-5" style="outline: 1px solid silver; padding: 2em;">
-                    <span class="text-muted">Output...</span>
-                </div>
-            </div>
+        <div class="tab">
+            <button class="tablinks" onclick="openTab(event, 'DirectoryTab')">Directory Analysis</button>
         </div>
-
+    
+        <!-- Form -->
         <div id="DirectoryTab" class="tabcontent">
-        <h3>Analyze Directory Structure</h3>
+            <h3>Analyze Directory Structure</h3>
             <form id="directoryForm" enctype="multipart/form-data">
                 <div class="form-group">
-                    <label for="directoryFile">Upload Directory (ZIP) or Python Files:</label>
+                    <label for="directoryFile">Upload Directory (ZIP):</label>
                     <input type="file" id="directoryFile" name="directory" required>
                 </div>
                 <div class="form-group">
-                    <label for="configFile">Optional Configuration File:</label>
-                    <input type="file" id="configFile" name="config" accept=".ini,.txt">
+                    <label for="configFile">Upload Configuration File (INI):</label>
+                    <input type="file" id="configFile" name="config" accept=".ini">
                 </div>
                 <button type="submit">Analyze Directory</button>
             </form>
         </div>
 
 
-        <div class="row">
-            <div class="col">
-                <h4 class="mt-5">Sent</h4>
-                <div class="mt-1" style="outline: 1px solid silver; padding: 2em;">
-                    <pre id="payload"><span class="text-muted">Nothing sent yet...</span></pre>
-                </div>
-            </div>
-            <div class="col">
-                <h4 class="mt-5">Received</h4>
-                <div class="mt-1" style="outline: 1px solid silver; padding: 2em;">
-                    <pre id="received"><span class="text-muted">Nothing received yet...</span></pre>
-                </div>
-            </div>
-        </div>
+        <!-- Results -->
+        <div id="result" class="result"></div>
     </div>
-
-
 
 </body>
 
 <script>
-    let sendBtn = document.getElementById("sendBtn");
-    let output = document.getElementById("output");
-    let sent = document.getElementById("payload");
-    let received = document.getElementById("received");
-
-    sendBtn.addEventListener("click", function() {
-        const headers = new Headers();
-        headers.append("Content-Type", "application/json");
-
-        const payload = { data: "test data" };
-        const body = {
-            method: 'POST',
-            headers: headers,
-            body: JSON.stringify(payload),
+    function openTab(evt, tabName) {
+            var i, tabcontent, tablinks;
+            tabcontent = document.getElementsByClassName("tabcontent");
+            for (i = 0; i < tabcontent.length; i++) {
+                tabcontent[i].style.display = "none";
+            }
+            tablinks = document.getElementsByClassName("tablinks");
+            for (i = 0; i < tablinks.length; i++) {
+                tablinks[i].className = tablinks[i].className.replace(" active", "");
+            }
+            document.getElementById(tabName).style.display = "block";
+            evt.currentTarget.className += " active";
         }
 
-        fetch("http://localhost:5000/data", body)
-        .then((response) => response.json())
-        .then((data) => {
-            sent.innerHTML = JSON.stringify(payload, undefined, 4);
-            received.innerHTML = JSON.stringify(data, undefined, 4);
-            if(data.error) {
-                console.log(data.message);
-            }else{
-                output.innerHTML = `<br><strong>Response from CALint<!strong>: ${data.message}`;
+        // Directory form submission
+        document.getElementById('directoryForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            analyzeDirectory();
+        });
+
+        async function analyzeDirectory() {
+            const formData = new FormData();
+            formData.append('directory', document.getElementById('directoryFile').files[0]);
+            
+            const configFile = document.getElementById('configFile').files[0];
+            if (configFile) {
+                formData.append('config', configFile);
             }
-        })
-        .catch(error => {
-            output.innerhTML += "<br><br>Error: " + error;
-            })
-    })
+            
+            await sendRequest('/analyze/directory', formData);
+        }
+
+                async function sendRequest(url, data, contentType = null) {
+            const resultDiv = document.getElementById('result');
+            resultDiv.style.display = 'none';
+            
+            try {
+                const options = {
+                    method: 'POST',
+                    body: data
+                };
+                
+                if (contentType) {
+                    options.headers = { 'Content-Type': contentType };
+                }
+                
+                const response = await fetch(url, options);
+                const result = await response.json();
+                
+                displayResult(result);
+            } catch (error) {
+                displayResult({
+                    success: false,
+                    error: 'Network error: ' + error.message
+                });
+            }
+        }
+
+                function displayResult(result) {
+            const resultDiv = document.getElementById('result');
+            
+            let html = '<h3>Analysis Result</h3>';
+            
+            if (result.success) {
+                resultDiv.className = 'result success';
+                html += '<p><strong>Status:</strong> ✅ Analysis completed successfully</p>';
+            } else {
+                resultDiv.className = 'result error';
+                html += '<p><strong>Status:</strong> ❌ Analysis failed</p>';
+            }
+            
+            if (result.output) {
+                html += '<p><strong>Output:</strong></p>';
+                html += '<pre>' + escapeHtml(result.output) + '</pre>';
+            }
+            
+            if (result.error) {
+                html += '<p><strong>Errors:</strong></p>';
+                html += '<pre>' + escapeHtml(result.error) + '</pre>';
+            }
+            
+            resultDiv.innerHTML = html;
+            resultDiv.style.display = 'block';
+        }
+
+        function escapeHtml(unsafe) {
+            return unsafe
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
 
 </script>
 
