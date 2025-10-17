@@ -12,56 +12,36 @@
 <body>
     <div class="container">
         <h1>CALint Web Interface</h1>
-        <p class="lead">A web interface for CALint - Code Analysis Linter</p>
+        <p class="lead">A web interface for CALint - Clean Architecture Linter</p>
 
-        <div class="tab">
-            <button class="tablinks" onclick="openTab(event, 'DirectoryTab')">Directory Analysis</button>
-        </div>
-    
-        <!-- Form -->
-        <div id="DirectoryTab" class="tabcontent">
+        <!-- directory analysis -->
+        <div class="analysis-section">
             <h3>Analyze Directory Structure</h3>
             <form id="directoryForm" enctype="multipart/form-data">
                 <div class="form-group">
                     <label for="directoryFile">Upload Directory (ZIP):</label>
-                    <input type="file" id="directoryFile" name="directory" required>
+                    <input type="file" id="directoryFile" name="directory" class="form-control" required>
                 </div>
                 <div class="form-group">
-                    <label for="configFile">Upload Configuration File (INI):</label>
-                    <input type="file" id="configFile" name="config" accept=".ini">
+                    <label for="configFile">Upload Configuration File (TXT, INI):</label>
+                    <input type="file" id="configFile" name="config" class="form-control" accept=".ini,.txt" required>
                 </div>
-                <button type="submit">Analyze Directory</button>
+                <button type="submit" class="btn btn-primary">Analyze Directory</button>
             </form>
         </div>
 
-
-        <!-- Results -->
+        <!-- results -->
         <div id="result" class="result"></div>
     </div>
 
-</body>
-
-<script>
-    function openTab(evt, tabName) {
-            var i, tabcontent, tablinks;
-            tabcontent = document.getElementsByClassName("tabcontent");
-            for (i = 0; i < tabcontent.length; i++) {
-                tabcontent[i].style.display = "none";
-            }
-            tablinks = document.getElementsByClassName("tablinks");
-            for (i = 0; i < tablinks.length; i++) {
-                tablinks[i].className = tablinks[i].className.replace(" active", "");
-            }
-            document.getElementById(tabName).style.display = "block";
-            evt.currentTarget.className += " active";
-        }
-
-        // Directory form submission
+    <script>
+        // dir form 
         document.getElementById('directoryForm').addEventListener('submit', function(e) {
             e.preventDefault();
             analyzeDirectory();
         });
 
+        // analyze directory - upload zip and config file
         async function analyzeDirectory() {
             const formData = new FormData();
             formData.append('directory', document.getElementById('directoryFile').files[0]);
@@ -74,7 +54,8 @@
             await sendRequest('/analyze/directory', formData);
         }
 
-                async function sendRequest(url, data, contentType = null) {
+        // send request - send form data to badkend
+        async function sendRequest(url, data, contentType = null) {
             const resultDiv = document.getElementById('result');
             resultDiv.style.display = 'none';
             
@@ -100,17 +81,18 @@
             }
         }
 
-                function displayResult(result) {
+        // display result - show analysis result
+        function displayResult(result) {
             const resultDiv = document.getElementById('result');
             
             let html = '<h3>Analysis Result</h3>';
             
             if (result.success) {
                 resultDiv.className = 'result success';
-                html += '<p><strong>Status:</strong> ✅ Analysis completed successfully</p>';
+                html += '<p><strong>Status:</strong> Analysis completed successfully</p>';
             } else {
                 resultDiv.className = 'result error';
-                html += '<p><strong>Status:</strong> ❌ Analysis failed</p>';
+                html += '<p><strong>Status:</strong> Analysis failed</p>';
             }
             
             if (result.output) {
@@ -127,6 +109,7 @@
             resultDiv.style.display = 'block';
         }
 
+        // escape html - avoid xss chars
         function escapeHtml(unsafe) {
             return unsafe
                 .replace(/&/g, "&amp;")
@@ -135,7 +118,6 @@
                 .replace(/"/g, "&quot;")
                 .replace(/'/g, "&#039;");
         }
-
-</script>
-
+    </script>
+</body>
 </html>
