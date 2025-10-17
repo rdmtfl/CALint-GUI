@@ -29,7 +29,6 @@ def run_import_linter(file_path, config_path=None):
     """
     
     try:
-
         if not os.path.exists(file_path):
             return {
                 'success': False,
@@ -39,7 +38,8 @@ def run_import_linter(file_path, config_path=None):
             }
 
         # cd into uploads/projectdir
-        os.chdir(app.config['UPLOAD_FOLDER'] + file_path)
+        os.chdir(app.config['UPLOAD_FOLDER'] + '/import-linter-example-main') # testing only
+        #os.chdir(app.config['UPLOAD_FOLDER'] + file_path)
 
         # build command
         cmd = ['lint-imports']
@@ -78,6 +78,55 @@ def run_import_linter(file_path, config_path=None):
             'error': f'Error running import-linter: {str(e)}',
             'returncode': -1
         }
+
+@app.route('/analyze/directory', methods=['POST'])
+def analyze_directory():
+    """
+    Analyze a directory structure using import-linter with config file
+    """
+
+    # check if post request has zip project
+    if 'directory' not in request.files:
+        return jsonify({'error': 'No directory archive provided'}), 400
+    
+    # get dir and conf files
+    directory_file = request.files['directory']
+    config_file = request.files.get('config')
+    
+    # create temporary directory
+    with tempfile.TemporaryDirectory() as temp_dir:
+        try:
+            # extract and save dir files
+            if directory_file.filename.endswith('.zip'):
+                import zipfile
+                zip_path = os.path.join(app.config['UPLOAD_FOLDER'], 'uploaded.zip')
+                directory_file.save(zip_path)
+                with zipfile.ZipFile(zip_path, 'r') as zip_ref:
+                    zip_ref.extractall(app.config['UPLOAD_FOLDER'])
+                analysis_path = temp_dir
+            else:
+                return jsonify({'error': 'Not a zip file'}), 400
+
+            # save config file
+            config_path = None
+            if config_file and allowed_file(config_file.filename):
+                config_filename = werkzeug.utils.secure_filename(config_file.filename)
+                config_path = os.path.join(app.config['UPLOAD_FOLDER'], config_filename)
+                config_file.save(config_path)
+
+            # run import-linter
+            result = run_import_linter(analysis_path, config_path)
+            
+            return jsonify(result)
+
+        # err - general    
+        except Exception as e:
+            return jsonify({
+                'success': False,
+                'output': '',
+                'error': f'Error processing directory: {str(e)}',
+                'returncode': -1
+            })
 
 
 # main endpoint
