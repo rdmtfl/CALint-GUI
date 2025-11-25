@@ -19,6 +19,35 @@ app.config['MAX_CONTENT_LENGTH'] = MAX_CONTENT_LENGTH
 # create dir if it doesn't exist
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
+
+def create_caling_config(directory_path: str) -> str:
+    # json file structure
+    config_calint = {
+        "roots": ["calint"],
+        "main": ["calint.main", 0],
+        "frameworks": ["calint.frameworks", 1],
+        "adapters": ["calint.adapters", 2],
+        "use_cases": ["calint.use_cases", 3],
+        "entities": ["calint.entities", 4]
+    }
+
+    try:
+        # convert to path
+        Path(directory_path).mkdir(parents=True, exist_ok=True)
+        dir_path = Path(directory_path) / 'calint.json'
+
+        # write json file        
+        with open(dir_path, 'w', encoding='utf-8') as f:
+            json.dump(config_calint, f, indent=4)
+
+    except Exception as e:
+        return {
+            "sucess": False,
+            "error": str(e),
+            "message": "Failed to create calint configuration file"
+        }
+
+
 def allowed_file(filename):
     return '.' in filename and \
               filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
