@@ -5,12 +5,14 @@ import json
 from flask import Flask, request, jsonify, render_template, send_file
 import werkzeug
 import pathlib
+from calint.main import main as calint
+
 
 app = Flask(__name__)
 
 # configuration
 UPLOAD_FOLDER = 'uploads'
-ALLOWED_EXTENSIONS = {'py', 'txt'}
+ALLOWED_EXTENSIONS = {'py', 'txt', 'json', 'ini'}
 MAX_CONTENT_LENGTH = 16 * 1024 * 1024 # 16MB
 
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
@@ -19,40 +21,11 @@ app.config['MAX_CONTENT_LENGTH'] = MAX_CONTENT_LENGTH
 # create dir if it doesn't exist
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
-
-def create_caling_config(directory_path: str) -> str:
-    # json file structure
-    config_calint = {
-        "roots": ["calint"],
-        "main": ["calint.main", 0],
-        "frameworks": ["calint.frameworks", 1],
-        "adapters": ["calint.adapters", 2],
-        "use_cases": ["calint.use_cases", 3],
-        "entities": ["calint.entities", 4]
-    }
-
-    try:
-        # convert to path
-        Path(directory_path).mkdir(parents=True, exist_ok=True)
-        dir_path = Path(directory_path) / 'calint.json'
-
-        # write json file        
-        with open(dir_path, 'w', encoding='utf-8') as f:
-            json.dump(config_calint, f, indent=4)
-
-    except Exception as e:
-        return {
-            "sucess": False,
-            "error": str(e),
-            "message": "Failed to create calint configuration file"
-        }
-
-
 def allowed_file(filename):
     return '.' in filename and \
               filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
-def run_import_linter(file_path, config_path=None):
+def run_import_linter(file_path):
     """
     Run import-linter on the specified directory
     """
@@ -67,12 +40,14 @@ def run_import_linter(file_path, config_path=None):
             }
 
         # cd into uploads/projectdir
-        os.chdir(app.config['UPLOAD_FOLDER'] + '/import-linter-example-main') # testing only
+        #os.chdir(app.config['UPLOAD_FOLDER'] + '/import-linter-example-main') # testing only
         #os.chdir(app.config['UPLOAD_FOLDER'] + file_path)
 
-        # build command
-        cmd = ['lint-imports']
+        os.chdir(file_path + '/python-clean-architecture-example') # testing only
         
+        # build command
+        #cmd = ['ls', '-lah']
+        cmd = ['calint']
         # run import-linter
         result = subprocess.run(
             cmd,
@@ -127,11 +102,13 @@ def analyze_directory():
         try:
             # extract and save dir files
             if directory_file.filename.endswith('.zip'):
+                nome_base = os.path.splitext(directory_file.filename)[0]
                 import zipfile
                 zip_path = os.path.join(app.config['UPLOAD_FOLDER'], 'uploaded.zip')
                 directory_file.save(zip_path)
                 with zipfile.ZipFile(zip_path, 'r') as zip_ref:
                     zip_ref.extractall(app.config['UPLOAD_FOLDER'])
+                    zip_ref.extractall(temp_dir)
                 analysis_path = temp_dir
             else:
                 return jsonify({'error': 'Not a zip file'}), 400
@@ -139,12 +116,19 @@ def analyze_directory():
             # save config file
             config_path = None
             if config_file and allowed_file(config_file.filename):
+                nome_destino = analysis_path + '/' + nome_base
+                print("nome_destino: ", nome_destino)
+
                 config_filename = werkzeug.utils.secure_filename(config_file.filename)
-                config_path = os.path.join(app.config['UPLOAD_FOLDER'], config_filename)
+                filename_hidden = f".{config_filename}"
+                #config_path = os.path.join(nome_destino, config_filename)
+                config_path = os.path.join(nome_destino, filename_hidden)
+                #config_path = os.path.join(app.config['UPLOAD_FOLDER'], config_filename)
                 config_file.save(config_path)
+                #config_file.save(analysis_path)
 
             # run import-linter
-            result = run_import_linter(analysis_path, config_path)
+            result = run_import_linter(analysis_path)
             
             return jsonify(result)
 
